@@ -1,0 +1,76 @@
+note: if a string is used for an integer, it's parsed as hex always
+
+str name
+u32 main_thread_stack_size
+u8 main_thread_priority
+u8 default_cpu_id
+u32 system_resource_size (optional)
+u32 version (default: 0) (deprecated alias: process_category)
+u8 address_space_type
+bool is_64_bit
+bool optimize_memory_allocation (optional)
+bool disable_device_address_space_merge (optional)
+bool enable_alias_region_extra_size (optional)
+bool prevent_code_reads (optional)
+u8 signature_key_generation (default: 0)
+
+bool is_retail
+bool unqualified_approval (default: false)
+u8 pool_partition
+u64 program_id_range_min
+u64 program_id_range_max
+u64 title_id_range_min
+u64 title_id_range_max
+
+u64 program_id (deprecated alias: title_id)
+dict filesystem_access
+    u64 permissions
+    list content_owner_ids (optional)
+        u64
+    list save_data_owner_ids (optional)
+        dict
+            u8 accessibility
+            u64 id
+list service_host
+    str (1 <= len <= 8)
+list service_access
+    str (1 <= len <= 8)
+list kernel_capabilities
+    dict
+        str type
+        (type == kernel_flags)
+            dict value
+                u8 highest_thread_priority
+                u8 lowest_thread_priority
+                u8 highest_cpu_id
+                u8 lowest_cpu_id
+        (type == syscalls)
+            dict value
+                u8 | str (0 <= value <= 0xbf)
+        (type == map)
+            dict value
+                u64 address
+                u64 size
+                bool is_ro
+                bool is_io
+        (type == map_page)
+            u64 value
+        (type == map_region)
+            list value (len <= 3)
+                dict region_descriptor
+                    u8 region_type
+                    bool is_ro
+        (type == irq_pair)
+            list value (len == 2)
+                u64 irq_number
+        (type == application_type)
+            u16 value (default 0)
+        (type == min_kernel_version)
+            u16 | str value
+        (type == handle_table_size)
+            u16 value
+        (type == debug_flags)
+            dict value (only one of these can be set to true)
+                bool allow_debug
+                bool force_debug
+                bool force_debug_prod
