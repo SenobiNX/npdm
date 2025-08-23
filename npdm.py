@@ -25,6 +25,9 @@ class BinaryWriter:
     def save(self, filename: str):
         with open(filename, "wb") as f:
             f.write(self.stream)
+    
+    def write_sub(self, other: "BinaryWriter"):
+        self.write_bytes(other.stream)
 
     def seek(self, offset: int, *, relative: bool = False):
         if relative:
@@ -264,19 +267,47 @@ def main():
     writer.write_u64(json_read_u64(contents, "program_id_range_max"))
     writer.seek_rel(0x20)
     
-    # ACID - FAC
+    # ACID - Filesystem Access Control
+
+    fs_access = json_read_dict(contents, "filesystem_access")
+    content_owner_ids = json_read_list(fs_access, "content_owner_ids", [])
 
     fac_offset = writer.position
-    fac = json_read_dict(contents, "filesystem_access")
     writer.write_u8(1) # version
-    content_owner_ids = json_read_list(fac, "content_owner_ids", [])
+    writer.write_u8(0) # content owner ID count
+    writer.write_u8(0) # save data owner ID count
+    writer.seek(fac_offset + 4)
+    writer.write_u64(json_read_u64(fs_access, "permissions"))
+    writer.write_u64(0) # content owner ID min
+    writer.write_u64(0) # content owner ID max
+    writer.write_u64(0) # save data owner ID min
+    writer.write_u64(0) # save data owner ID max
+    fac_size = writer.position - fac_offset
+
+    # ACID - Service Access Control
+
+    writer.align(0x10)
+    sac_offset = writer.position
+    
+    sac_writer = BinaryWriter()
+    service_host = json_read_list(contents, "service_host")
+    service_access = json_read_list(contents, "service_access")
+    for service in service_host:
+        if not isinstance(service, str):
+            print(f"error: `service_host` elements must be strings", file=sys.stderr)
+            sys.exit(1)
+    
+        
 
 
+    writer.seek(sac_offset)
+    writer.write_sub(sac_writer)
 
-    # writer.seek(acid_offset + 0x220)
-    # writer.write_u32(fac_offset)
-    # writer.write_u32(fac_size)
-    # writer.write_u32(sac_offset)
+
+    writer.seek(acid_offset + 0x220)
+    writer.write_u32(fac_offset - acid_offset)
+    writer.write_u32(fac_size)
+    # writer.write_u32(sac_offset - acid_offset)
     # writer.write_u32(sac_size)
     # writer.write_u32(kc_offset)
     # writer.write_u32(kc_size)
