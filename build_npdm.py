@@ -35,7 +35,7 @@ class BinaryWriter:
         with open(filename, "wb") as f:
             f.write(self.stream)
     
-    def write_sub(self, other: "BinaryWriter"):
+    def write_sub(self, other: typing.Self):
         self.write_bytes(other.stream)
 
     def seek(self, offset: int, *, relative: bool = False):
