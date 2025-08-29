@@ -205,8 +205,9 @@ def write_sac(contents: dict) -> BinaryWriter:
 def write_kc(contents: dict) -> BinaryWriter:
     writer = BinaryWriter()
     kernel_caps = json_read_list(contents, "kernel_capabilities")
-    for cap in kernel_caps:
+    for cap_idx, cap in enumerate(kernel_caps):
         abort_unless(isinstance(cap, dict), "kernel capabilities must be dicts")
+        abort_unless(cap_idx < 32, "too many kernel capabilities (max = 32)")
         
         type_ = json_read_str(cap, "type")
         if type_ == "kernel_flags":
